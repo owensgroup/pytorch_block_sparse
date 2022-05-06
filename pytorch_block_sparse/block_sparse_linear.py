@@ -166,11 +166,13 @@ class BlockSparseLinear(nn.Module):
         torch_nn_linear=None,
         verbose: bool = False,
         block_shape: Tuple[int, int] = (32, 32),
+        emulate_unoptimized: bool = True,
     ):
         super(BlockSparseLinear, self).__init__()
         self.fn = BlockSparseLinearFunction.apply
         self.verbose = verbose
         self.block_shape = block_shape
+        self.emulate_unoptimized = emulate_unoptimized
         self._optimized = (
             self.block_shape[0] == self.OPTIMIZED_BLOCK_SIZE and self.block_shape[1] == self.OPTIMIZED_BLOCK_SIZE
         )
@@ -199,7 +201,7 @@ class BlockSparseLinear(nn.Module):
 
         block_shape = self.block_shape
 
-        if self._optimized:
+        if self._optimized or not self.emulate_unoptimized:
             BlockSparseMatrixConstructor = BlockSparseMatrix
         else:
             BlockSparseMatrixConstructor = BlockSparseMatrixEmulator
