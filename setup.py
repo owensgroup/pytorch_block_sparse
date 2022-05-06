@@ -8,20 +8,18 @@ rootdir = os.path.dirname(os.path.realpath(__file__))
 
 version = "0.1.2"
 
-ext_modules = []
+ext = CUDAExtension(
+    "block_sparse_native",
+    [
+        "pytorch_block_sparse/native/block_sparse_native.cpp",
+        "pytorch_block_sparse/native/block_sparse_cutlass_kernel_back.cu",
+        "pytorch_block_sparse/native/block_sparse_cutlass_kernel.cu",
+    ],
+    extra_compile_args=["-I", "%s/pytorch_block_sparse" % rootdir],
+)
+ext_modules = [ext]
 
-if torch.cuda.is_available():
-    ext = CUDAExtension(
-        "block_sparse_native",
-        [
-            "pytorch_block_sparse/native/block_sparse_native.cpp",
-            "pytorch_block_sparse/native/block_sparse_cutlass_kernel_back.cu",
-            "pytorch_block_sparse/native/block_sparse_cutlass_kernel.cu",
-        ],
-        extra_compile_args=["-I", "%s/pytorch_block_sparse" % rootdir],
-    )
-    ext_modules = [ext]
-else:
+if not torch.cuda.is_available():
     print("WARNING: torch cuda seems unavailable, emulated features only will be available.")
 
 setup(
