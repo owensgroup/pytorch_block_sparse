@@ -493,7 +493,7 @@ class BlockSparseMatrixBase(torch.nn.Module):
         # warnings.warn(message)
         return t.contiguous(), False
 
-    def reverse_matmul_(self, dense_a, transpose=True):
+    def reverse_matmul_(self, runtime_ms, dense_a, transpose=True):
         """Compute a.matmul(self.t()) if transposed, else a.matmul(self)"""
         import block_sparse_native
 
@@ -563,6 +563,7 @@ class BlockSparseMatrixBase(torch.nn.Module):
             print("reverse_matmul_\n", dense_a.shape, data_b.shape)
 
         block_sparse_native.blocksparse_matmul_cutlass(
+            runtime_ms,
             dense_a,
             True,
             ptr_b,
@@ -594,11 +595,11 @@ class BlockSparseMatrixBase(torch.nn.Module):
             result = result.view(*shape_start, result.shape[-1])
         return result
 
-    def reverse_matmul(self, dense_a, transpose):
+    def reverse_matmul(self, runtime_ms, dense_a, transpose):
         assert str(self.data.device).startswith("cuda")
 
         rewritten_a, info_a = self.flatten_first_dims(dense_a)
-        ret = self.reverse_matmul_(rewritten_a, transpose=transpose)
+        ret = self.reverse_matmul_(runtime_ms, rewritten_a, transpose=transpose)
 
         ret = self.unflatten_first_dims(ret, info_a)
         return ret

@@ -14,7 +14,7 @@ from .block_sparse import (
 
 class BlockSparseLinearFunction(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, input, weight_data, weight):
+    def forward(ctx, input, weight_data, weight, runtime_ms):
         check = False
         verbose = False
 
@@ -37,7 +37,7 @@ class BlockSparseLinearFunction(torch.autograd.Function):
 
         ctx.save_for_backward(input, weight_data)
         ctx.weight = weight
-        output = weight.reverse_matmul(input, transpose=True)
+        output = weight.reverse_matmul(runtime_ms, input, transpose=True)
         if check:
             dense = weight.to_dense()
             output1 = input.matmul(dense.t())

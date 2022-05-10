@@ -1,4 +1,5 @@
 #include <torch/extension.h>
+#include <c10/cuda/CUDAStream.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -21,6 +22,8 @@
 
 // Dispatch routines to CUTLASS
 #include "cutlass_dispatch.h"
+
+#include "timer.cuh"
 
 using namespace std;
 using namespace cutlass;
@@ -110,7 +113,8 @@ typedef cudaError_t (*forward_t)(float* A_data,
 								int n,
 								int k);
 
-int blocksparse_matmul_cutlass(torch::Tensor dense_a,
+int blocksparse_matmul_cutlass(torch::Tensor runtime_ms,
+							   torch::Tensor dense_a,
                                bool pytorch_contiguous_a,
   							   torch::Tensor ptr_b,
 							   torch::Tensor indices_b,
@@ -144,9 +148,20 @@ int blocksparse_matmul_cutlass(torch::Tensor dense_a,
     //} else {
         forward_fun = forward<Transpose, TransformB, value_t, accum_t>;
     //}
+
+	util::DeviceTimer timer;
+	cudaStream_t stream = c10::cuda::getCurrentCUDAStream();
+
+	if (runtime_ms.numel() != 0) {  // If size > 0 then time the kernel
+		timer.start(stream);
+	}
+
     cudaError_t error = forward_fun(A_data,B_data,B_ptr, B_indices, C_data, m, n, k);
+
+	if (runtime_ms.numel() != 0) {
+		timer.stop(stream);
+		runtime_ms[0] = timer.milliseconds();
+  	}
 
     return error;
 }
-
-
