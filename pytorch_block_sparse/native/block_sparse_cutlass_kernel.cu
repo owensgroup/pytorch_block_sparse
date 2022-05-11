@@ -113,7 +113,7 @@ typedef cudaError_t (*forward_t)(float* A_data,
 								int n,
 								int k);
 
-int blocksparse_matmul_cutlass(torch::Tensor runtime_ms,
+int blocksparse_matmul_cutlass(torch::Tensor &runtime_ms,
 							   torch::Tensor dense_a,
                                bool pytorch_contiguous_a,
   							   torch::Tensor ptr_b,
