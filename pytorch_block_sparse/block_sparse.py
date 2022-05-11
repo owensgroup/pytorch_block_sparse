@@ -434,12 +434,13 @@ class BlockSparseMatrixBase(torch.nn.Module):
             raise Exception("cols should be bidimensional, not of shape %s" % cols.shape)
         if cols.dtype != self.int_type:
             raise Exception("cols should be %s, not of type %s" % (self.int_type, cols.dtype))
-        max_col = cols[:, 0].max()
-        if max_col > shape[1] / block_shape[1]:
-            raise Exception(
-                "cols max element (%d) cannot be larger than shape[1]/block_shape[1] (%d)"
-                % (max_col, shape[1] / block_shape[1])
-            )
+        if cols[:, 0].numel() > 0:
+            max_col = cols[:, 0].max()
+            if max_col > shape[1] / block_shape[1]:
+                raise Exception(
+                    "cols max element (%d) cannot be larger than shape[1]/block_shape[1] (%d)"
+                    % (max_col, shape[1] / block_shape[1])
+                )
 
         if len(row_end.shape) != 1:
             raise Exception("row_end should be unidimensional, not of shape %s" % row_end.shape)
